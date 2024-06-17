@@ -1,4 +1,3 @@
-import { verifyToken } from '../../lib/auth';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { PrismaClient } from '@prisma/client';
 
@@ -9,7 +8,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       const transactions = await prisma.account.findMany({
         include: {
-          amount: true,
+          // Assuming amount is a related model, this should be an object or array
+          amount: true, // Ensure that 'amount' is correctly defined in your schema
         },
       });
 
@@ -17,8 +17,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         account_id: transaction.account_id,
         company_name: transaction.company_name,
         amount: {
-          amount: transaction.amount.amount.toFixed(4),
-          currency: transaction.amount.currency,
+          // Assuming transaction.amount is an object
+          amount: transaction.amount?.amount.toFixed(4), // Optional chaining in case amount is null or undefined
+          currency: transaction.amount?.currency,
         },
         credit_debit_indicator: transaction.credit_debit_indicator,
         datetime: transaction.datetime.toISOString(),
@@ -26,7 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       res.status(200).json(formattedTransactions);
     } catch (error) {
-      console.error(error);
+      console.error('Error fetching transactions:', error);
       res.status(500).json({ error: 'An error occurred while fetching transactions.' });
     } finally {
       await prisma.$disconnect();
